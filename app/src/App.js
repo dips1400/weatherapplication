@@ -307,7 +307,7 @@ export default function App() {
       <div className="bg-canvas">{renderFX()}</div>
       <div className="app-content">
         <header className="app-header">
-          <div className="brand-name">Atmosphera</div>
+          <div className="brand-name">Atmospher</div>
           <div className="brand-sub">Live Weather</div>
         </header>
 
