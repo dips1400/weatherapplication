@@ -1,32 +1,22 @@
 const express = require("express")
 const axios = require("axios")
-const cors = require("cors") // 1. Import CORS
 require("dotenv").config()
 
 const app = express()
-const PORT = 5000
+const PORT = process.env.PORT || 5000
 
-app.use(cors()) // 2. Enable CORS for all requests
+// No cors() needed — proxy means browser never makes a cross-origin request
 
 const apiKey = process.env.WEATHER_API_KEY
 
 app.get("/weatherApi", async (req, res) => {
   const city = req.query.city
-
-  if (!city) {
-    return res.status(400).json({ error: "City is required" })
-  }
+  if (!city) return res.status(400).json({ error: "City is required" })
 
   try {
     const response = await axios.get(
-      `https://api.openweathermap.org/data/2.5/weather`,
-      {
-        params: {
-          q: city,
-          appid: apiKey,
-          units: "metric",
-        },
-      },
+      "https://api.openweathermap.org/data/2.5/weather",
+      { params: { q: city, appid: apiKey, units: "metric" } },
     )
     res.json(response.data)
   } catch (error) {
