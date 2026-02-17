@@ -21,7 +21,6 @@ function getThemeKey(weatherId, isNight) {
   return "cloudy"
 }
 
-
 function rand(min, max) {
   return Math.random() * (max - min) + min
 }
@@ -166,7 +165,6 @@ function LightningLayer() {
   )
 }
 
-// ─── Stat card component ─────────────────────────────────────────────────────
 function StatCard({ icon, label, value }) {
   return (
     <div className="stat-card">
@@ -177,22 +175,12 @@ function StatCard({ icon, label, value }) {
   )
 }
 
-// ─── Sun/moon arc ─────────────────────────────────────────────────────────────
 function SunArc({ sunrise, sunset, current }) {
   const total = sunset - sunrise
   const elapsed = Math.min(Math.max(current - sunrise, 0), total)
   const pct = total > 0 ? elapsed / total : 0
-  // arc: 180° sweep from left to right
-  const angle = pct * 180 - 90 // -90 to +90 degrees
-  const rad = (angle * Math.PI) / 180
-  const cx = 50,
-    cy = 90,
-    r = 40
-  const px = cx + r * Math.cos(rad - Math.PI / 2) * (Math.PI / 2) * 2
-  // Simple SVG arc position
-  const arcX = cx + r * Math.sin(pct * Math.PI)
-  const arcY = cy - r * Math.abs(Math.sin(pct * Math.PI))
-
+  const arcX = 50 + 40 * Math.sin(pct * Math.PI)
+  const arcY = 55 - 40 * Math.abs(Math.sin(pct * Math.PI))
   return (
     <svg viewBox="0 0 100 60" className="sun-arc" aria-hidden>
       <path
@@ -212,12 +200,11 @@ function SunArc({ sunrise, sunset, current }) {
   )
 }
 
-// ─── Main App ────────────────────────────────────────────────────────────────
 export default function App() {
   const [query, setQuery] = useState("")
   const [weather, setWeather] = useState(null)
   const [themeKey, setThemeKey] = useState("sunny")
-  const [unit, setUnit] = useState("metric") // metric | imperial
+  const [unit, setUnit] = useState("metric")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [cardVis, setCardVis] = useState(false)
@@ -225,7 +212,6 @@ export default function App() {
 
   const theme = THEMES[themeKey]
 
-  // ── convert stored °C ──
   const toDisplay = useCallback(
     (c) => (unit === "metric" ? Math.round(c) : Math.round((c * 9) / 5 + 32)),
     [unit],
@@ -237,18 +223,15 @@ export default function App() {
     [unit],
   )
 
-  // ── fetch ──────────────────────────────────────────────────────────────────
   const fetchWeather = async (city = query) => {
     const q = city.trim()
     if (!q) return
     setLoading(true)
     setError("")
     setCardVis(false)
-
     try {
-      const res = await fetch(
-        `http://localhost:5000/weatherApi?city=${encodeURIComponent(q)}&units=metric`,
-      )
+      // ✅ Relative URL — proxy handles routing, zero CORS issues anywhere
+      const res = await fetch(`/weatherApi?city=${encodeURIComponent(q)}`)
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         throw new Error(body.error || `City not found (${res.status})`)
@@ -266,7 +249,6 @@ export default function App() {
     }
   }
 
-  // ── time helpers ───────────────────────────────────────────────────────────
   const fmtTime = (unix, tz) => {
     const d = new Date((unix + tz) * 1000)
     return d.toUTCString().slice(17, 22)
@@ -276,7 +258,6 @@ export default function App() {
     return d.toUTCString().slice(0, 22)
   }
 
-  // ── background FX ──────────────────────────────────────────────────────────
   const renderFX = () => {
     switch (themeKey) {
       case "sunny":
@@ -323,17 +304,13 @@ export default function App() {
 
   return (
     <div className={`app-root ${theme.bg}`}>
-      {/* ── Animated background ── */}
       <div className="bg-canvas">{renderFX()}</div>
-
-      {/* ── Content ── */}
       <div className="app-content">
         <header className="app-header">
-          <div className="brand-name">Atmospher</div>
+          <div className="brand-name">Atmosphera</div>
           <div className="brand-sub">Live Weather</div>
         </header>
 
-        {/* Search */}
         <div className="search-row">
           <div className="search-box">
             <span className="search-icon">⌕</span>
@@ -368,7 +345,6 @@ export default function App() {
           </button>
         </div>
 
-        {/* Unit toggle */}
         <div className="unit-toggle">
           <button
             className={unit === "metric" ? "active" : ""}
@@ -384,7 +360,6 @@ export default function App() {
           </button>
         </div>
 
-        {/* Quick chips */}
         <div className="chips-row">
           {QUICK.map((c) => (
             <button
@@ -400,10 +375,8 @@ export default function App() {
           ))}
         </div>
 
-        {/* Error */}
         {error && <div className="error-banner">⚠ {error}</div>}
 
-        {/* Loading skeleton */}
         {loading && (
           <div className="skeleton-card">
             <div className="skel skel-title" />
@@ -412,10 +385,8 @@ export default function App() {
           </div>
         )}
 
-        {/* Weather card */}
         {weather && !loading && (
           <div className={`weather-card ${cardVis ? "card-visible" : ""}`}>
-            {/* Top row */}
             <div className="card-top">
               <div>
                 <div className="city-name">{weather.name}</div>
@@ -426,8 +397,6 @@ export default function App() {
               </div>
               <div className="big-icon">{theme.icon}</div>
             </div>
-
-            {/* Temp + description */}
             <div className="temp-block">
               <span className="temp-number">
                 {toDisplay(weather.main.temp)}
@@ -441,15 +410,11 @@ export default function App() {
             <div className="condition-str">
               {weather.weather[0].description}
             </div>
-
-            {/* Sun arc */}
             <SunArc
               sunrise={weather.sys.sunrise}
               sunset={weather.sys.sunset}
               current={weather.dt}
             />
-
-            {/* Stat grid */}
             <div className="stats-grid">
               <StatCard
                 icon="💧"
@@ -486,8 +451,6 @@ export default function App() {
                 value={`${weather.main.pressure} hPa`}
               />
             </div>
-
-            {/* Sunrise / Sunset */}
             <div className="divider" />
             <div className="sun-row">
               <div className="sun-block">
